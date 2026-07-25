@@ -2,6 +2,7 @@
 # %matplotlib inline
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 g_m = 1
 g_k = 1
@@ -9,8 +10,8 @@ g_x = 0
 g_v = 1
 
 # simulation time, timestep and time
-g_t_max = 100
-g_dt = 0.001
+g_t_max = 1000000
+g_dt = 0.1
 g_t_array = np.arange(0, g_t_max, g_dt)
 
 
@@ -80,10 +81,13 @@ def Verlet():
     
     return x_list
         
-
+time1 = time.time()
 x_array, v_array = Euler()
-vx_array = Verlet()
+# vx_array = Verlet()
+time2 = time.time()
 
+
+print((time2 - time1))
 # plot the position-time graph
 plt.figure(1)
 plt.clf()
@@ -91,6 +95,6 @@ plt.xlabel('time (s)')
 plt.grid()
 plt.plot(g_t_array, x_array, label='x (m)')
 plt.plot(g_t_array, v_array, label='v (m/s)')
-plt.plot(g_t_array, vx_array, label='verlet x (m/s)')
+# plt.plot(g_t_array, vx_array, label='verlet x (m/s)')
 plt.legend()
 plt.show()
