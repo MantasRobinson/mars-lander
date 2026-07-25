@@ -21,16 +21,56 @@ void autopilot (void)
 }
 
 void numerical_dynamics (void)
-  // This is the function that performs the numerical integration to update the
-  // lander's pose. The time step is delta_t (global variable).
-{
-  // INSERT YOUR CODE HERE
+    // This is the function that performs the numerical integration to update the
+    // lander's pose. The time step is delta_t (global variable).
+    {
+    // INSERT YOUR CODE HERE
 
-  // Here we can apply an autopilot to adjust the thrust, parachute and attitude
-  if (autopilot_enabled) autopilot();
+    double landerMass{ UNLOADED_LANDER_MASS + fuel * FUEL_CAPACITY * FUEL_DENSITY };
+    vector3d gravAccel{};
+    gravAccel = (-GRAVITY * MARS_MASS) / (std::pow(position.abs(), 3)) * position;
 
-  // Here we can apply 3-axis stabilization to ensure the base is always pointing downwards
-  if (stabilized_attitude) attitude_stabilization();
+    vector3d dragAccel{};
+    dragAccel = -0.5 * atmospheric_density(position) * DRAG_COEF_LANDER * M_PI * std::pow(LANDER_SIZE, 2) *
+        velocity.abs() * velocity / landerMass;
+
+    vector3d thrustAccel{ thrust_wrt_world() / landerMass };
+
+    vector3d parachuteDrag{};
+    if (parachute_status == DEPLOYED) {
+        parachuteDrag = -0.5 * atmospheric_density(position) * DRAG_COEF_CHUTE * 5 * std::pow(2 * LANDER_SIZE, 2) *
+            velocity.abs() * velocity / landerMass;
+    }
+    else {
+        parachuteDrag = { 0,0,0 };
+    }
+
+
+    vector3d acceleration{ gravAccel + dragAccel + thrustAccel +parachuteDrag};
+
+    static vector3d previous_position{ position - delta_t * velocity
+            + 0.5 * delta_t * delta_t * acceleration };
+
+
+
+
+    if (simulation_time == 0.0) {
+        previous_position = position - delta_t * velocity
+            + 0.5 * delta_t * delta_t * acceleration;
+    }
+
+    vector3d currentPosition{ position };
+    position = (2 * position) - previous_position + (std::pow(delta_t, 2) * acceleration);
+    velocity = (1 / delta_t) * (position - currentPosition);
+    previous_position = currentPosition;
+
+
+    // Here we can apply an autopilot to adjust the thrust, parachute and attitude
+    if (autopilot_enabled) autopilot();
+
+    // Here we can apply 3-axis stabilization to ensure the base is always pointing downwards
+    if (stabilized_attitude) attitude_stabilization();
+
 }
 
 void initialize_simulation (void)
